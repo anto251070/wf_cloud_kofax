@@ -1,0 +1,64 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core"  >
+
+		<Dialog id="ch.unige.fi.kofaxuimodule.Dialog.CON"  title="{i18n>CON}">
+		
+		<content>
+			<List id="ch.unige.fi.kofaxuimodule.CONSelectDialog"
+			 mode="SingleSelectMaster" 
+			 headerText="Header" footerText="" backgroundDesign="Solid" showSeparators="All" 
+			 growing="true" growingThreshold="10" growingScrollToLoad="false" 
+			 items="{ path : 'Z_ACCOUNTS_SRV>/AccountSet', 
+			 sorter : { path : 'Saknr', descending : false } ,
+             parameters: {select: 'Saknr, Sakan, Txt50'}}"
+			 selectionChange="onCONSearchOkButtonPress"
+			 itemPress="onCONOkButtonPress" >
+
+				<headerToolbar>
+					<Toolbar id="ch.unige.fi.kofaxuimodule.CONToolbar.CON"  width="" design="Solid">
+						<content>
+							<SearchField id="SearchFieldCON" placeholder="{i18n>searchPlaceholderCON}" 
+							showSearchButton="true" visible="true" width="100%" 
+							liveChange="onCONSearch" search="onCONSearch"/>
+						</content>
+					</Toolbar>
+				</headerToolbar>
+
+				<items>
+					<CustomListItem id="ch.unige.fi.kofaxuimodule.ListItem.CON" type="Active">
+						
+						<HBox id="ch.unige.fi.kofaxuimodule.HBox1.CON">
+						  <VBox id="ch.unige.fi.kofaxuimodule.VBox1.CON" width="100%" 
+							class="sapUiSmallMarginBegin sapUiSmallMarginTopBottom sapUiNoMarginBottom">
+							
+								<FlexBox id="ch.unige.fi.kofaxuimodule.FlexBox1.CON" alignItems="Start" 
+								  justifyContent="SpaceBetween" class="sapUiSmallMarginEnd">
+									<items>
+										<Title id="ch.unige.fi.kofaxuimodule.Title.CON" level="H2" 
+										 text="{Z_ACCOUNTS_SRV>Saknr}  " textAlign="Left"  />
+		                     
+										 <Label  id="ch.unige.fi.kofaxuimodule.ObjectStatus.CON"   
+									      text="   {Z_ACCOUNTS_SRV>Txt50}" textAlign="Right" />
+
+
+ 
+									</items>
+								</FlexBox>
+							</VBox>
+
+						</HBox>
+
+					</CustomListItem>
+				</items>
+			</List>
+		</content>
+		<beginButton/>
+
+		<buttons>
+			<Button id="OKButton1.CON"  text="{i18n>okButton}"      width="auto" enabled="true" visible="true" iconDensityAware="false" press="onCONOkButtonPress"/>
+			<Button id="KOnButton2.CON" text="{i18n>cancelButton}"  width="auto" enabled="true" visible="true" iconDensityAware="false" press="onCONCancelButtonPress"/>
+		</buttons>
+		<customHeader/>
+		<endButton/>
+		<subHeader/>
+	</Dialog>
+</core:FragmentDefinition>
