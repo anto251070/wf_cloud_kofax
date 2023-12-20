@@ -1,1 +1,404 @@
 
+<mvc:View xmlns:html="http://www.w3.org/1999/xhtml"
+ xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" 
+ xmlns:upload="sap.m.upload" xmlns:l="sap.ui.layout" 
+ xmlns:f="sap.ui.layout.form" xmlns:core="sap.ui.core" 
+ controllerName="ch.unige.fi.kofaxuimodule.controller.App" displayBlock="true">
+ 
+	<ScrollContainer
+		height="100%"
+		width="100%"
+		vertical="true"
+		focusable="true">
+        <App id="app">
+        <pages>
+            <Page id="_IDGenPage1" showHeader="false" showFooter="false">
+                <content>
+                  <l:VerticalLayout width="100%" id="__layout0">
+                   <l:content>
+
+
+                        <ObjectHeader title="{/task/Title} - {/Gjahr}" number="{  parts:[{path:'/demande_amount'},{path:'/ParkedinvoiceH/Divise'}],                                   
+                          type: 'sap.ui.model.type.Currency',   formatOptions: {showMeasure: true} }" numberUnit="{/ParkedinvoiceH/Divise}" titleActive="false" id="__header0">
+
+                            <attributes>
+                                <ObjectAttribute id="_IDGenObjectAttribute1" title="{i18n>createdOn}" text="{/task/CreatedOn}"/>
+                                <ObjectAttribute id="_IDGenObjectAttribute2" title="{i18n>description}" text="{/Type}"/>
+                                <ObjectAttribute id="_IDGenObjectAttribute3" title="{i18n>user}" text="{/user_name}"/>
+                                    </attributes>
+                            <statuses>
+                                <ObjectStatus id="_IDGenObjectStatus1" text="{/task/Status}" state="None"/>
+                                <ObjectStatus id="_IDGenObjectStatus2" text="{/task/Priority}" state="{/task/PriorityState}"/>
+
+                            </statuses>
+                        </ObjectHeader>
+
+ 
+                         <!--      Donnés de base    -->
+                            <Panel id="_IDGenPaneldb" expandable="true" width="auto" expanded="true" class="sapUiResponsiveMargin" accessibleRole="Region">
+                                    <headerToolbar>
+                                        <OverflowToolbar id="_IDGenOverflowToolbar1dbk">
+                                            <Title id="_IDGenTitle1dbk" text="Données de base"/>
+                                        </OverflowToolbar>
+                                    </headerToolbar>
+                                    <content>
+
+                                         <l:VerticalLayout id="_IDGenVerticalLayout1" class="sapUiContentPadding equalColumns" width="100%">
+                                          <l:content>
+                                            <FlexBox width="100%" id="box0">
+                                     
+                                                 <items>
+                                                        <!-- VBOX0-->
+                                                        <VBox width="100%" direction="Column" id="vbox1">
+
+                                                                <f:SimpleForm id="_IDGenSimpleForm1dbk" editable="false" layout="ResponsiveGridLayout">
+                                                    
+                                                                    <Label id="_IDGenLabel1ldbk" text="Date pièce" design="Bold"/>                                                           
+                                                                    <DatePicker xmlns="sap.m" id="9IDGenrText1edbk" displayFormat="dd-MM-yyyy" valueFormat="yyyy-MM-dd" value="{'path':'/ParkedinvoiceH/Bldat' }"/>
+                            
+                                                                    <Label id="_IDGenLabel24dbk" text="Date comptable" design="Bold"/>      
+                                                                    <DatePicker xmlns="sap.m" id="bext2e7k" displayFormat="dd-MM-yyyy" valueFormat="yyyy-MM-dd" value="{'path':'/ParkedinvoiceH/Budat' }"/>
+
+                                                                    <Label id="_IDGedlMDuedatelb" text="Date d’échéance" design="Bold"/>  
+                                                                    <DatePicker xmlns="sap.m" id="bexDuedate2e7k" displayFormat="dd-MM-yyyy" valueFormat="yyyy-MM-dd" value="{'path':'/ParkedinvoiceH/Duedate' }" enabled="false"  />   
+
+
+                                                                    <Label id="_IDGenLabel24Xdbk" text="N° pièce de référence" design="Bold"/>   
+                                                                    <Input id="_IDGenText2eXdbk" value="{/ParkedinvoiceH/Xblnr}"/>
+
+                                                                    <Label id="_IDGenLabel3tdbk" text="Texte d'en-tête" design="Bold"/>   
+                                                                    <Input id="_IDGenText4edbk" value="{/ParkedinvoiceH/Bktxt}"/>
+        
+                                                                    <Label id="_IDGenLabel46dbk" text="Type de pièce" design="Bold"/>   
+                                                                    <Text id="_IDGenText5edbk" text="{/ParkedinvoiceH/Blart}"/>
+
+      
+                                                                </f:SimpleForm>
+                                                        </VBox>
+                                                        <!-- VBOX1-->
+                                                        <VBox width="100%" direction="Column" id="vbox2">
+                                                             <f:SimpleForm id="_IDGenSimpleFormvbox2" editable="false" layout="ResponsiveGridLayout">
+                                                     
+                                                                       <Label id="_IDGedlab416" text="Réf. QR" design="Bold"/>  
+                                                                       <Input id="_IDGenT452e" value="{/ParkedinvoiceH/QrRef}"/>   
+
+                                                                       <Label id="_IDGedlab426" text="QR IBAN" design="Bold"/>  
+                                                                       <Input id="_IDGenTedede" value="{/ParkedinvoiceH/Qriban}"/>
+
+                                                    
+
+                                                                       <Label id="_IDGedlMCondpaimtt" text="Cond.paimt" design="Bold"/>  
+                                                                    
+
+
+                                                                                    <ComboBox   selectedKey="{/ParkedinvoiceH/Paymentconditioncode}"
+                                                                                            items="{ path: '/PaymentCondition',  sorter: { path: 'Paymentconditioncode' } }" templateShareable="false">
+
+                                                                                            <core:Item key="{Paymentconditioncode}" text="{Paymentconditioncode} - {Description}"/>
+
+                                                                                    </ComboBox>
+       
+
+                                                                         <Label id="_IDGedlModepmt" text="Mode pmt" design="Bold"/>  
+                                                               
+
+                                                                       
+                                                                                    <ComboBox   selectedKey="{/ParkedinvoiceH/Paymentmethodcode}"
+                                                                                            items="{ path: '/PaymentMethod',  sorter: { path: 'Paymentmethodcode' } }" templateShareable="false">
+
+                                                                                            <core:Item key="{Paymentmethodcode}" text="{Paymentmethodcode} - {Paymentmethodtext}"/>
+
+                                                                                    </ComboBox>
+
+                                                                       
+                                                                        <CheckBox id="_IDGenCheckBox1" text="Calculer TVA" selected="{/ParkedinvoiceH/Calctva}" />
+
+
+                                                                       <Label id="_IDGenLafbc_6dbk" text="Devise" design="Bold"/>  
+
+                                                                                    <ComboBox id="cboxCurrencies"  selectedKey="{/ParkedinvoiceH/Divise}"  change="onchange_combox_cur" enabled="{'path':'/cboxdevise' }"
+                                                                                            items="{ path: '/Currencies',  sorter: { path: 'Currency' } }" templateShareable="false">
+
+                                                                                            <core:Item id="_IDItemsCBCurrencies" key="{Currency}" text="{Currency} - {Currencyname}"/>
+
+                                                                                    </ComboBox>
+
+
+
+                                                                </f:SimpleForm>
+
+                                                        </VBox>
+
+ 
+                                                         <!-- VBOX3-->
+                                                        <VBox width="100%" direction="Column" id="vbox3">                                         
+                                                                <!--      Chat     -->
+                                                                    <Panel id="_IDGenPanel2" expandable="true" width="auto" stickyHeader="true" expanded="true" class="sapUiResponsiveMargin" accessibleRole="Region">
+                                                                    <headerToolbar>
+                                                                        <OverflowToolbar id="_IDGenOverflowToolbar21">
+                                                                            <Title id="_IDGenTitle2" text="Chat"/>
+                                                                        </OverflowToolbar>
+                                                                    </headerToolbar>
+                                                                        <content>
+                                                                            <f:SimpleForm id="_IDGenSimpleForm2" maxContainerCols="2" editable="false" layout="ResponsiveGridLayout">  
+                                                            
+                                                                            <TextArea id="_IDGenTextArea2" value="{/Chat}" growing="true" width="100%" rows="6"/>
+                                                                        
+                                                    
+                                                                            </f:SimpleForm>
+                                                                        </content>
+                                                                    </Panel>                        
+                                                        </VBox>
+                                                 </items>
+                                     
+                                                 </FlexBox>
+                                     
+                                                </l:content>
+                                     
+                                                </l:VerticalLayout>
+
+ 
+ 
+                                    </content>
+                            </Panel>
+
+
+                           <!--      Supplier     -->
+                            <Panel id="_IDGenPanel1" expandable="true" width="auto" class="sapUiResponsiveMargin" expanded="true" accessibleRole="Region">
+                                    <headerToolbar>
+                                        <OverflowToolbar id="_IDGenOverflowToolbar1">
+                                            <Title id="_IDGenTitle1" text="Détails Fournisseur"/>
+                                        </OverflowToolbar>
+                                    </headerToolbar>
+                                    <content>
+ 
+                                           <l:VerticalLayout id="_IDGenVerticalLayout2" class="sapUiContentPadding equalColumns" width="100%">
+                                               <l:content>
+                                      
+                                                  <FlexBox width="100%" id="box24">
+                                            
+                                                        <items>
+                                            
+                                                            <VBox width="100%" direction="Column" id="vbox34">
+
+                                                                <f:SimpleForm id="_IDGenSimple4rm1dbk" editable="false" layout="ResponsiveGridLayout">
+
+
+                                                           
+                                                                       <Label xmlns="sap.m" id="_IDGenLabelx1l" text="Nom" design="Bold"/>
+                                                                       <Input xmlns="sap.m" id="in_customer" value="{/ParkedinvoiceH/Name}" valueHelpOnly="false" showValueHelp="true" valueHelpRequest="onValueHelpRequestCustomer" maxLength="5" fieldWidth="10%"/>
+                                                               
+                                                                        <Label xmlns="sap.m" id="_IDGenLabel1l" text="ID" design="Bold"/>
+                                                                        <Text xmlns="sap.m" id="_IDGenText1e" text="{/ParkedinvoiceH/Vendor}"/>
+                                                                          
+                                                                        <Label id="_IDGenLabel24" text="Rue" design="Bold"/>     
+                                                                        <Text id="_IDGenText2e" text="{/ParkedinvoiceH/Street}"/>
+
+                                                                        <Label id="_IDGenLabel24X" text="Code postal" design="Bold"/>   
+                                                                        <Text id="_IDGenText2eX" text="{/ParkedinvoiceH/Postalcode}"/>
+
+                                                                        <Label id="_IDGenLabel3t" text="Ville" design="Bold"/>   
+                                                                        <Text id="_IDGenText4e" text="{/ParkedinvoiceH/City}"/>
+                                                                        
+                                                                        <Label id="_IDGenLabel46" text="Pays" design="Bold"/>   
+                                                                        <Text id="_IDGenText5e" text="{/ParkedinvoiceH/Country}"/>
+                                                          
+                                                                </f:SimpleForm>
+
+                                                            </VBox>
+                                                              <VBox width="100%" direction="Column" id="vbox44">
+                                                                   <f:SimpleForm id="_IDGenSimrrm1dbk" editable="false" layout="ResponsiveGridLayout">
+                                                                   
+                                                                      <Label id="_IDGedlab46" text="Type de banque partenaire" design="Bold"/>  
+ 
+
+                                                               
+                                                                                 <ComboBox id="_IDGenTesdf2e"  selectedKey="{/ParkedinvoiceH/Bankcounter}" change="onchange_combox"
+                                                                                            items="{ path: '/ArrayBankVendor',  sorter: { path: 'Counter' } }" templateShareable="false">
+
+                                                                                            <core:Item key="{Counter}" text="{Bankaccount} - {Text}"/>
+
+                                                                                    </ComboBox>
+
+
+                                                                       <Label id="_IDGenLabeText3t" text="Banque" design="Bold"/>   
+                                                                        <Text id="_IDGenTextText4e" text="{/BankVendor/Text}"/>
+
+                                                                        <Label id="_IDGenLabeAccountl3t" text="Account" design="Bold"/>   
+                                                                        <Text id="_IDGenTextAccount4e" text="{/BankVendor/Bankaccount}"/>
+                                                                        
+                                                                        <Label id="_IDGenLabountryel46" text="Pays" design="Bold"/>   
+                                                                        <Text id="_IDGenTexountryt5e" text="{/BankVendor/Bankcountry}"/>
+
+
+                                                                        <Label id="_IDGenLabeIbanl3t" text="Iban" design="Bold"/>   
+                                                                        <Text id="_IDGenTextIbano" text="{/BankVendor/Iban}"/>
+                                                                        
+                                                                        <Label id="_IDGenLabelSwift46" text="Swift" design="Bold"/>   
+                                                                        <Text id="_IDGenTexSwiftt5e" text="{/BankVendor/Swift}"/>
+
+
+                                                                  </f:SimpleForm>
+                                                              </VBox>
+                                                    </items>
+                                     
+                                                 </FlexBox>
+                                     
+                                                </l:content>
+                                     
+                                        </l:VerticalLayout>
+ 
+                                    </content>
+
+  
+                            </Panel>
+
+      
+                             <!--      Items     -->
+                            <Panel id="_IDGenPanel3" expandable="true" width="auto" expanded="true" class="sapUiResponsiveMargin" accessibleRole="Region">
+                                    <headerToolbar>
+                                        <OverflowToolbar id="_IDGenOverflowToolbar3">
+                                            <Title id="_IDGenTitle3" text="Postes"/>
+                                        </OverflowToolbar>
+                                    </headerToolbar>
+                                    <content>
+                                       <f:SimpleForm id="_IDGenSimpleForm3" maxContainerCols="2" editable="false" layout="ResponsiveGridLayout">
+
+
+                                           <Table id="ch.unige.fi.kofaxuimodule.Items.Table" alternateRowColors="true" growing="true" growingThreshold="5" 
+                                                paste="onPaste" selectionChange="onSelectionChanged" items="{  path: '/toItems' }">
+                                             
+                                             <headerToolbar>
+                                                <OverflowToolbar id="ch.unige.fi.kofaxuimodule.Toolbar">
+                                                  <Text id="ch.unige.fi.almauimoduletxt.ajout.TxT" text="Ajouter"/>
+                                                  <OverflowToolbarButton id="ch.unige.fi.kofaxuimodule.ButtonAdd" icon="sap-icon://add" text="Ajouter Poste" iconFirst="false" type="Reject" press="addRow"/>
+                                                  <ToolbarSpacer id="_IDGenToolbarSpacer10"/>
+                                                                <Text id="ch.unige.fi.kofaxuimoduletxt.Total.TxT" text="Total"/>
+                                                                <Text id="ch.unige.fi.kofaxuimoduletxt.Total" text="{path: 'Total>/Total_Reg'}"/>
+                                                                <Text id="ch.unige.fi.kofaxuimoduletxt.Total.Divise" text=" / "/> 
+                                                                <Text id="ch.unige.fi.kofaxuimoduletxt.Total.Items" text="{path: 'Total>/Total'}"/>
+                                                   <ToolbarSpacer id="_IDGenToolbarSpacer1"/>
+                                                    <SearchField id="_IDGenSearchField1" width="17.5rem" liveChange="onFilter"/>
+
+                                                    <OverflowToolbarButton id="_IDGenOverflowToolbarButton4" tooltip="Sort" text="Sort" press="onSort" icon="sap-icon://sort"/>
+                                                    <OverflowToolbarButton id="_IDGenOverflowToolbarButton1" tooltip="Export" text="Export" icon="sap-icon://excel-attachment" press="onExport"/>
+
+                                                </OverflowToolbar>
+                                             </headerToolbar>
+                                               
+   
+                                            <columns>
+                                                <Column id="ch.unige.fi.kofaxuimodule.IDGenColumn0" width="3%">
+                                                    <Text id="ch.unige.fi.kofaxuimodule.label0" text="" width="3rem"/>
+                                                </Column>
+
+                                                 <Column id="ch.unige.fi.kofaxuimodule.IDGenColb" width="5%" hAlign="Center">
+                                                    <Text id="ch.unige.fi.kofaxuimodule.IDGenTexb" text="D/C"/>
+                                                </Column>
+
+                                                <Column id="ch.unige.fi.kofaxuimodule.IDGenColumn1" width="10%" hAlign="Center">
+                                                    <Text id="ch.unige.fi.kofaxuimodule.IDGenText1" text="Compte général"/>
+                                                </Column>
+
+                                                <Column id="ch.unige.fi.kofaxuimodule.IDGenColumn2" minScreenWidth="Tablet" demandPopin="true" width="7%" hAlign="Center">
+                                                    <Text id="ch.unige.fi.kofaxuimodule.IDGenText2" text="Montant"/>
+                                                </Column>
+
+                                                <Column id="ch.unige.fi.kofaxuimodule.IDGenColumnTVA" minScreenWidth="Tablet" demandPopin="true" width="10%" hAlign="Center">
+                                                    <Text id="ch.unige.fi.kofaxuimodule.IDGenTextTVA" text="TVA"/>
+                                                </Column>
+
+                                                <Column id="ch.unige.fi.kofaxuimodule.IDGenColumn3" minScreenWidth="Tablet" demandPopin="true" width="20%" hAlign="Center">
+                                                    <Text id="ch.unige.fi.kofaxuimodule.IDGenText3" text="Texte de poste"/>
+                                                </Column>
+
+                                                <Column id="ch.unige.fi.kofaxuimodule.IDGenColumn4" minScreenWidth="Tablet" demandPopin="true" width="25%" hAlign="Center">
+                                                    <Text id="ch.unige.fi.kofaxuimodule.IDGenText4" text="Elément d’OTP"/>
+                                                </Column>
+
+                                            </columns>
+
+                                                        <items>
+                                                            <ColumnListItem id="ch.unige.fi.kofaxuimodule.ColumnListItem1" vAlign="Middle">
+                                                                <cells>
+                                                                    <Button id="_IDGenButton1" icon="sap-icon://delete" press="deleteRow" type="Reject"/>
+
+                                                        
+                                                                                 <ComboBox id="sel_deb_cred"  selectedKey="{Dcred}"
+                                                                                            items="{ path: '/Debitcredit',  sorter: { path: 'key' } }" templateShareable="false">
+
+                                                                                            <core:Item key="{key}" text="{text}"/>
+
+                                                                                    </ComboBox>
+
+                                                                        <Input id="_IDGenObjectIdentifier1" value="{Compte}" valueHelpRequest="onCONFilterSelect" showValueHelp="true" textAlign="Right" width="100%" class="sapUiSmallMargin"/>
+                                                                       
+                                                                         <Input id="ch.unige.fi.kofaxuimodule.montant" 
+                                                                            value="{   parts:[     {path:'Montant'}     ],   
+                                                                            type: 'sap.ui.model.type.Currency',  
+                                                                            formatOptions:{  showMeasure: false }}" liveChange="onCalculateTotalItems" 
+                                                                            textAlign="Right" width="100%" class="sapUiSmallMargin"/>
+
+                                                                          <ComboBox   selectedKey="{Taxindicator}"
+                                                                             items="{ path: '/Tax',  sorter: { path: 'TaxIndicator' } }" templateShareable="false">
+
+                                                                             <core:Item key="{TaxIndicator}" text="{TaxIndicator} - {TaxDescription}"/>
+
+                                                                         </ComboBox>
+
+                                                                     <Input id="inputtxt" value="{Txt}"/>                                                         
+                                                                    <Input id="inputwbs" value="{Wbselement}" textAlign="Right" valueHelpRequest="onODPFilterSelect" showValueHelp="true"/>
+                                                
+                                                                    
+                                                                </cells>
+                                                            </ColumnListItem>
+                                                        </items>
+                                                    </Table>
+                                       </f:SimpleForm>
+                                    </content>
+                            </Panel>
+
+                             <!--      Attachments       -->
+                              <Panel id="_IDGenPanel4" expandable="true" headerText="Facture" width="auto" expanded="true" class="sapUiResponsiveMargin" accessibleRole="Region">
+
+                                <content>
+                                     <upload:UploadSet noDataText="Aucun fichier trouvé" 
+                                     maximumFileSize="10" multiple="false" 
+                                     noDataDescription="Faites glisser ici les fichiers à charger ou utilisez le bouton &quot;+&quot;." 
+                                     change="onAttachmentChange"
+                                     uploadCompleted="onUploadCompleted" 
+                                     beforeUploadStarts="onBeforeUploadStarts" 
+                                     fileTypes="pdf" 
+                                     mediaTypes="application/pdf,application/x-pdf" 
+                                     items="{path: '/toFiles', templateShareable: true}" 
+                                     showSeparators="Inner" 
+                                     fileDeleted="onAttachmentDeleted"
+                                     id="UploadSet">
+                                        
+                                        <upload:items>
+
+                                                <upload:UploadSetItem id="_IDGenUploadSetItem1" fileName="{Filename}" mediaType="{Mimetype}" url="{Url}" uploadState="{uploadState}" visibleRemove="false" enabledRemove="false">
+
+                                                        <upload:attributes>
+                                                                    <ObjectAttribute id="_IDGenObjectAttribute4" title="{Attachmentid}" text="{Mimetype}"/>
+                                                        </upload:attributes>
+                                                        <upload:statuses>
+                                                              <ObjectStatus id="_IDGenObjectStatus5" title="{title}" text="{path: 'Createdon', type: 'sap.ui.model.type.Date', formatOptions: { style: 'medium'}}"/>
+                                                        </upload:statuses>
+                                                 </upload:UploadSetItem>
+
+                                        </upload:items>
+                                    </upload:UploadSet>
+
+                                </content>
+                            </Panel>
+           
+                          </l:content>
+                  </l:VerticalLayout>
+                </content>
+            </Page>
+        </pages>
+    
+    </App>
+    	</ScrollContainer>
+</mvc:View>
