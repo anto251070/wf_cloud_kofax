@@ -1,0 +1,272 @@
+{
+    "_version": "1.26.0",
+    "sap.app": {
+        "id": "ch.unige.fi.kofaxuimodule",
+        "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "applicationVersion": {
+            "version": "0.0.1"
+        },
+        "title": "{{appTitle}}",
+        "description": "{{appDescription}}",
+        "resources": "resources.json",
+        "sourceTemplate": {
+            "id": "@sap/generator-fiori:basic",
+            "version": "1.8.4",
+            "toolsId": "00b69cc6-91f3-4e23-b694-6b699e9c18d4"
+        },
+        "dataSources": {
+            "mainService": {
+                "uri": "/sap/opu/odata/sap/Z_KOFAX_INVOICE_SRV/",
+                "type": "OData",
+                "settings": {
+                    "annotations": [],
+                    "localUri": "localService/metadata.xml",
+                    "odataVersion": "2.0"
+                }
+            },
+            "Z_GENERIC_FUNDS_REGUL_SRV": {
+                "uri": "/sap/opu/odata/sap/Z_GENERIC_FUNDS_REGUL_SRV/",
+                "type": "OData",
+                "settings": {
+                    "annotations": [],
+                    "localUri": "localService/Z_GENERIC_FUNDS_REGUL_SRV.xml/metadata.xml",
+                    "odataVersion": "2.0"
+                }
+            },
+            "Z_WBS_ELEMENT_SBIND": {
+                "uri": "/sap/opu/odata/sap/Z_WBS_ELEMENT_SBIND/",
+                "type": "OData",
+                "settings": {
+                    "annotations": [],
+                    "localUri": "localService/Z_WBS_ELEMENT_SBIND.xml/metadata.xml",
+                    "odataVersion": "2.0"
+                }
+            },
+            "Z_BUDGET_ACCOUNT_SBIND": {
+                "uri": "/sap/opu/odata/sap/Z_BUDGET_ACCOUNT_SBIND/",
+                "type": "OData",
+                "settings": {
+                    "annotations": [],
+                    "localUri": "localService/Z_BUDGET_ACCOUNT_SBIND.xml/metadata.xml",
+                    "odataVersion": "2.0"
+                }
+            },
+            "ZSB_GESTION_ACCES": {
+                "uri": "/sap/opu/odata/sap/ZSB_GESTION_ACCES/",
+                "type": "OData",
+                "settings": {
+                    "annotations": [
+                        "ZSB_GESTION_ACCES_Annotation"
+                    ],
+                    "localUri": "localService/ZSB_GESTION_ACCES.xml/metadata.xml",
+                    "odataVersion": "2.0"
+                }
+            },
+
+            "Z_ACCOUNTS_SRV": {
+                "uri": "/sap/opu/odata/sap/Z_ACCOUNTS_SRV/",
+                "type": "OData",
+                "settings": {
+                    "annotations": [
+ 
+                    ],
+                    "localUri": "localService/Z_ACCOUNTS_SRV.xml/metadata.xml",
+                    "odataVersion": "2.0"
+                }
+            },
+
+
+
+
+            "Posting": {
+                "uri": "model/Posting.json",
+                "type": "JSON"
+            },
+            "Total": {
+                "uri": "model/Total.json",
+                "type": "JSON"
+            } ,
+            "ZSB_GESTION_ACCES_Annotation": {
+                "uri": "/destinations/UNIGE_S4HANA/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Annotations(TechnicalName='ZSB_GESTION_ACCES_VAN',Version='0001')/$value/",
+                "type": "ODataAnnotation",
+                "settings": {
+                    "localUri": "localService/ZSB_GESTION_ACCES.xml/ZSB_GESTION_ACCES_Annotation.xml"
+                }
+            }
+        }
+    },
+    "sap.ui": {
+        "technology": "UI5",
+        "icons": {
+            "icon": "",
+            "favIcon": "",
+            "phone": "",
+            "phone@2": "",
+            "tablet": "",
+            "tablet@2": ""
+        },
+        "deviceTypes": {
+            "desktop": true,
+            "tablet": true,
+            "phone": true
+        }
+    },
+    "sap.ui5": {
+        "flexEnabled": true,
+        "dependencies": {
+            "minUI5Version": "1.82.2",
+            "libs": {
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.f": {},
+                "sap.suite.ui.generic.template": {},
+                "sap.ui.comp": {},
+                "sap.ui.generic.app": {},
+                "sap.ui.table": {},
+                "sap.ushell": {}
+            }
+        },
+        "contentDensities": {
+            "compact": true,
+            "cozy": true
+        },
+        "models": {
+            "i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "settings": {
+                    "bundleName": "ch.unige.fi.kofaxuimodule.i18n.i18n"
+                }
+            },
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
+                "settings": {
+                    "defaultBindingMode": "TwoWay",
+                    "defaultCountMode": "Inline",
+                    "refreshAfterChange": false,
+                    "metadataUrlParams": {
+                        "sap-value-list": "none"
+                    }
+                }
+            },
+            "Z_GENERIC_FUNDS_REGUL_SRV": {
+                "dataSource": "Z_GENERIC_FUNDS_REGUL_SRV",
+                "preload": true,
+                "settings": {
+                    "defaultBindingMode": "TwoWay",
+                    "defaultCountMode": "Inline",
+                    "refreshAfterChange": false,
+                    "metadataUrlParams": {
+                        "sap-value-list": "none"
+                    }
+                }
+            },
+            "Z_WBS_ELEMENT_SBIND": {
+                "dataSource": "Z_WBS_ELEMENT_SBIND",
+                "preload": true,
+                "settings": {
+                    "defaultBindingMode": "TwoWay",
+                    "defaultCountMode": "Inline",
+                    "refreshAfterChange": false,
+                    "metadataUrlParams": {
+                        "sap-value-list": "none"
+                    }
+                }
+            },
+            "Z_BUDGET_ACCOUNT_SBIND": {
+                "dataSource": "Z_BUDGET_ACCOUNT_SBIND",
+                "preload": true,
+                "settings": {
+                    "defaultBindingMode": "TwoWay",
+                    "defaultCountMode": "Inline",
+                    "refreshAfterChange": false,
+                    "metadataUrlParams": {
+                        "sap-value-list": "none"
+                    }
+                }
+            },
+            "ZSB_GESTION_ACCES": {
+                "dataSource": "ZSB_GESTION_ACCES",
+                "preload": true,
+                "settings": {
+                    "defaultBindingMode": "TwoWay",
+                    "defaultCountMode": "Inline",
+                    "refreshAfterChange": false,
+                    "metadataUrlParams": {
+                        "sap-value-list": "none"
+                    }
+                }
+            },
+            "Z_ACCOUNTS_SRV": {
+                "dataSource": "Z_ACCOUNTS_SRV",
+                "preload": true,
+                "settings": {
+                    "defaultBindingMode": "TwoWay",
+                    "defaultCountMode": "Inline",
+                    "refreshAfterChange": false,
+                    "metadataUrlParams": {
+                        "sap-value-list": "none"
+                    }
+                }
+            },
+
+ 
+
+            "Posting": {
+                "type": "sap.ui.model.json.JSONModel",
+                "dataSource": "Posting"
+            },
+            "Total": {
+                "type": "sap.ui.model.json.JSONModel",
+                "dataSource": "Total"
+            } 
+        },
+        "resources": {
+            "css": [
+                {
+                    "uri": "css/style.css"
+                }
+            ]
+        },
+        "routing": {
+            "config": {
+                "routerClass": "sap.m.routing.Router",
+                "viewType": "XML",
+                "async": true,
+                "viewPath": "ch.unige.fi.kofaxuimodule.view",
+                "controlAggregation": "pages",
+                "controlId": "app",
+                "clearControlAggregation": false
+            },
+            "routes": [
+                {
+                    "name": "RouteKofaxTaskUI",
+                    "pattern": ":?query:",
+                    "target": [
+                        "TargetKofaxTaskUI"
+                    ]
+                }
+            ],
+            "targets": {
+                "TargetKofaxTaskUI": {
+                    "viewType": "XML",
+                    "transition": "slide",
+                    "clearControlAggregation": false,
+                    "viewId": "KofaxTaskUI",
+                    "viewName": "KofaxTaskUI"
+                }
+            }
+        },
+        "rootView": {
+            "viewName": "ch.unige.fi.kofaxuimodule.view.App",
+            "type": "XML",
+            "async": true,
+            "id": "App"
+        }
+    },
+    "sap.cloud": {
+        "public": true,
+        "service": "zunige_ui_kofax_approuter"
+    }
+}
