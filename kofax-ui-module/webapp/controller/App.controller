@@ -1,0 +1,1441 @@
+sap.ui.define(
+    [
+        "sap/ui/core/mvc/Controller",
+        "sap/ui/core/format/NumberFormat",
+        "sap/ui/model/Filter",
+        'sap/ui/model/FilterOperator',
+        "sap/m/MessageToast",
+        "sap/ui/export/library",
+        "sap/ui/export/Spreadsheet",
+        'sap/ui/model/Sorter',
+        "sap/m/MessageBox"
+    ],
+
+	   /**
+     * @param {typeof sap.ui.core.mvc.Controller} Controller
+      * https://blogs.sap.com/2020/09/08/calling-external-api-in-custom-task-ui-of-workflow-in-cloud-foundry/
+     * https://sapui5.hana.ondemand.com/#/entity/sap.ui.export.Spreadsheet/sample/sap.ui.export.sample.table/code
+     * https://ui5.sap.com//#/entity/sap.m.OverflowToolbarButton/sample/sap.m.sample.OverflowToolbarFooter/code
+     */
+    
+      function (Controller , NumberFormat, Filter, FilterOperator, MessageToast, exportLibrary, Spreadsheet,Sorter,MessageBox) {
+      "use strict";
+
+
+      var sResponsivePaddingClasses = "sapUiResponsivePadding--header sapUiResponsivePadding--content sapUiResponsivePadding--footer";
+
+      var EdmType = exportLibrary.EdmType;
+
+      
+      return Controller.extend("ch.unige.fi.kofaxuimodule.controller.App", {
+        _keyfragmenrt1: null,
+        _keyfragmenrt2: null,
+        _keyfragmenrt3: null,
+        
+        onInit: function () {
+
+
+          // keis for the fragments in case are aready bounded
+          const d = new Date();
+
+          let minutes = d.getMinutes();
+          let ms = d.getMilliseconds();
+
+           this._keyfragmenrt1 = "a" + minutes + ms ;
+           this._keyfragmenrt2 = "b" + minutes + ms ;
+           this._keyfragmenrt3 = "c" + minutes + ms ;
+
+
+          var owf_context = this.getView().getModel();
+
+
+           //Model pour le Total de la facture
+           sap.ui.getCore().setModel(this.getOwnerComponent().getModel("Total"), "Total");
+           this._set_total(owf_context.oData.demande_amount , owf_context.oData.toItems);   
+  
+          this._Ausbk =   owf_context.getProperty("/Ausbk");
+          this._Bukrs =   owf_context.getProperty("/Bukrs");
+          this._Belnr =   owf_context.getProperty("/Belnr");
+          this._Gjahr =   owf_context.getProperty("/Gjahr");
+
+
+        
+         //Model pour le Total de la demande à Regularizer
+
+          var oPostingModel = this.getOwnerComponent().getModel("Posting");
+        
+    
+             oPostingModel.setProperty("/Ausbk",  this._Ausbk);
+             oPostingModel.setProperty("/Bukrs", this._Bukrs);
+             oPostingModel.setProperty("/Belnr",  this._Belnr);
+             oPostingModel.setProperty("/Gjahr",  this._Gjahr );
+ 
+
+         
+             this.getView().setModel(oPostingModel,"Posting");
+
+           
+       
+                //////////////////////////////
+                // Access Controle --> get OTP
+                   var su = this.getOwnerComponent().getModel("ZSB_GESTION_ACCES").sServiceUrl  ;
+                   this.oODataModel = new sap.ui.model.odata.ODataModel(su, true);
+                   var oODataJSONModelOTP = new sap.ui.model.json.JSONModel();
+                   su = su + "/ZI_GEST_ACCES_OTP";
+                  
+                   var aFilters = [];
+                 // Deactivated ...   
+                 ////  aFilters.push(new Filter("UniqueId", sap.ui.model.FilterOperator.EQ, that._user_name ));
+        
+                   this.oODataModel.read("/ZI_GEST_ACCES_OTP" ,{
+                        filters: aFilters,
+                        success: 
+                                function (oData, oResponse) {
+                                    //  set the odata JSON as data of JSON model
+                                    oODataJSONModelOTP.setData(oData);
+                                    var oOTP = JSON.parse(JSON.stringify(oODataJSONModelOTP.getData()));
+                        
+                                    // Create filter OTP
+
+                                    that._set_OTP_Filter(oOTP);
+                      
+                                }
+                    });
+        
+                   // Access Controle --> get OTP --> END
+      
+                        var that = this;
+                
+     
+                        var existingData = that.getView().getModel();
+
+                        that._user_name  =  existingData.oData.user_name;
+
+                         /*  Automatic Claim of the task
+                        if (existingData.oData.task.Status !== 'RESERVED') { 
+                              // POP UP Pour reserver 
+
+
+                              MessageBox.confirm(
+                                'Voulez-vous reserver la facture: ' + that._Belnr  + ' ' + that._Gjahr + ' ?' , {
+                                    
+                                 title: "Creation Facture",
+        
+                                actions: [sap.m.MessageBox.Action.OK, sap.m.MessageBox.Action.NO ],
+                      
+                                onClose: function (sAction) {
+                                    if (sAction === sap.m.MessageBox.Action.OK) {
+                                   
+                                           // The task has been opened : => Reserved!
+                                           that._reserved(existingData, that._user_name);
+                                    } 
+                            
+                                }.bind(this)
+                              }
+                            );
+                         
+ 
+                        };
+
+                        */
+
+ 
+
+        },
+
+
+                  /**
+                  * Error POPUP Change Supp
+                  * @param {ParkedinvoiceH}  
+                  * @public
+                  **/
+                 _msgbox_changesupp: function(ParkedinvoiceH) {
+              
+                    var msg_str = "Il faut changer le fournisseur " +  ParkedinvoiceH.Vendor + " " + ParkedinvoiceH.Name;
+
+                    MessageBox.warning(
+                        msg_str,
+                        {
+                          icon: MessageBox.Icon.WARNING,
+                          title: "Modifier le Fournisseur",
+                          actions: [MessageBox.Action.OK],
+                          emphasizedAction: MessageBox.Action.OK,
+                          styleClass: sResponsivePaddingClasses
+                        }
+                    );
+
+                 },
+
+
+                 onExit: function() {
+                      if (this.dialog) {
+                      
+                            this.dialog = undefined;
+
+                      }
+
+                      if (this.dialog2) {
+                          this.dialog2 = undefined;
+                    }
+
+                    if (this.dialogACC) {
+                          this.dialogACC = undefined;
+
+                    }
+
+                } ,  
+ 
+
+
+
+                onAfterRendering: function() {
+ 
+                   var owf_context = this.getView().getModel();
+            
+
+                   // Check if the Task has been already claimed   
+                    if (owf_context.oData.task.Status === 'RESERVED') { 
+
+  
+                      // POP UP pour changer 1018345 --> Begin
+
+                            if (owf_context.getProperty("/ParkedinvoiceH").Vendor === '1009092' || 
+                                owf_context.getProperty("/ParkedinvoiceH").Vendor === '1018345'   ){
+            
+                              this._msgbox_changesupp(owf_context.getProperty("/ParkedinvoiceH"))
+
+
+                            }
+
+
+                    // POP UP pour changer 1018345 --> end
+  
+                  }
+  
+
+                },
+      
+                /**
+                  * Lock Currency Control ComboBox
+                  * @param {Items} 
+                  * @private
+                * */
+
+                _lockcurrency: function ( ) {
+                  this.getView().byId("_IDItemsCBCurrencies").setEnabled(false);   
+                  this.getView().byId("cboxCurrencies").getSelectedItem().setEnabled(false);   
+              
+                },
+
+
+
+
+               /**
+                  * Save APP Router Prefix Files  
+                  * @param {object} [] oFiles  
+                  * @public
+                **/
+              
+              _setRouterPrefix_in_Files: function (oFiles) {
+
+                // add APP Router Prefix
+
+                for (var j = 0; j < oFiles.length; j++) {
+                  var oAttachmentURL =  "/zunige_ui_kofax_approuter.chunigefikofaxuimodule" + oFiles[j].Url;
+                  oFiles[j].Url = oAttachmentURL;
+              
+                }
+    
+              },
+
+
+
+                /**
+                  * Create [] Filter for OTP
+                  * @param {object} oOTP
+                  * @public
+                **/
+
+              _set_OTP_Filter: function (oOTP) {
+
+                var aFilters = [];
+                        if ( oOTP.results.length > 0 ) {
+
+
+                  for (var d = 0; d < oOTP.results.length; d++) {
+                      aFilters.push(new sap.ui.model.Filter('WBSElementExternalID', sap.ui.model.FilterOperator.EQ, oOTP.results[d].Objet))
+                  }
+
+                  this._OTP_Filter =  [new sap.ui.model.Filter(aFilters, false)] ;
+
+                  } else {
+        
+                  this._OTP_Filter =  [];
+
+                        // aFilters.push(new Filter("UniqueId", sap.ui.model.FilterOperator.EQ, that._user_name ));
+                  };
+
+
+              },
+
+
+            /**
+              * Calculate Totals in number format et Devise
+              * @param {object} Montant
+              * @public
+            **/
+          _set_total: function (Montant , toItems)  {
+
+               // get the Currency
+               var owf_context = this.getView().getModel();
+                 
+              let Devise = owf_context.getProperty("/ParkedinvoiceH/Divise" );  
+
+              // Total de la Demande -> Defaul = valuer de la pièce
+              var oTotal = sap.ui.getCore().getModel("Total");
+
+              var oCurrencyFormat = NumberFormat.getCurrencyInstance({
+                  currencyCode: false
+              });
+              
+            var tot_format = oCurrencyFormat.format(Montant, Devise); // returns ¥1,235
+
+
+        
+              oTotal.setProperty("/Total_Reg", tot_format );
+
+      
+
+                  // calculate TOTAL dees ITEMS
+                  var sTotal = 0.00;
+                  var Charnumber = 0.00;
+      
+                  for (var r = 0; r < toItems.length; r++) {
+      
+                      Charnumber = toItems[r].Montant;
+                      var number = Number.parseFloat(Charnumber);
+      
+                      if( toItems[r].Dcred === "0") {
+                        sTotal = sTotal + number;
+
+                      } else { //"Crédit",
+                        sTotal = sTotal - number;
+
+                      }
+ 
+                   
+                  }
+      
+                  var oCurrencyFormat = NumberFormat.getCurrencyInstance({
+                      currencyCode: false
+                  });
+                  
+                 var tot_format = oCurrencyFormat.format(sTotal, Devise); // returns ¥1,235
+            
+       
+                 oTotal.setProperty("/Total",  tot_format);
+ 
+            },
+
+                 ////////////////////////Element OTP Filter ///////////////////////
+               onODPFilterSelect: function (oEvent) {
+                  var t = oEvent.getSource().getBindingContext().getPath();
+                  this._index = t.substr(t.length - 1);
+
+                  if (!this.dialog) {
+                      this.dialog = sap.ui.xmlfragment(this._keyfragmenrt1, "ch.unige.fi.kofaxuimodule.view.fragment.OTP", this);
+                      this.getView().addDependent(this.dialog);
+                  }
+
+
+
+                  // Access Controle --> Applay OTP
+
+                  //   var fragmentID = "idFragment--ch.unige.fi.kofaxuimodule.OTPSelectDialog";
+                  //   var r = sap.ui.getCore().byId(fragmentID);
+                  //   var i = r.getBindingInfo("items");
+          
+                  //   r.bindAggregation("items", 
+                  //    {
+                  //      model: i.model, 
+                  //      path: i.path, 
+                  //      parameters: i.parameters,
+                  //      template: i.template, 
+                  //      filters: this._OTP_Filter
+                  //    })
+
+                  // Access Controle --> Applay OTP --> End
+
+
+                  this.dialog.open();
+                  return this.dialog;
+              },
+
+              onOTPCancelButtonPress: function () {
+                  this.dialog.close();     // First: close fragment
+                  // take care: necessary to destry ? error adding element with duplicate id....
+                  //   this.dialog.destroy(); //Second: destoy fragment  
+                  //   this.dialog=null;      // Third: null name/pointer 
+              },
+
+              onOTPSearch: function (e) {
+                  var fragmentID = this._keyfragmenrt1 +    "--ch.unige.fi.kofaxuimodule.OTPSelectDialog";
+                  var array_filter = ["WBSElementExternalID", "WBSDescription",
+                      "ProjectDescription", "Fund_Desc", "PGrant_Desc"];
+                  this._onOTPSearch(e, fragmentID, array_filter)
+              },
+
+            _onOTPSearch: function (e, fragmentID, array_filter) {
+                var r = sap.ui.getCore().byId(fragmentID);
+
+                //   r._aSelectedPaths
+
+                var i = r.getBindingInfo("items");
+
+                var s = e.getParameter("query") || e.getParameter("newValue");
+                var n = [];
+                var l = [];
+
+                if (s && s.length > 0) {
+                    for (var d = 0; d < array_filter.length; d++) {
+                        l.push(new sap.ui.model.Filter(array_filter[d], sap.ui.model.FilterOperator.Contains, s))
+                    }
+                }
+                n = l.length > 0 ? [new sap.ui.model.Filter(l, false)] : [];
+                r.bindAggregation("items", {
+                    model: i.model, path: i.path, parameters: i.parameters,
+                    template: i.template, filters: n
+                })
+            },
+
+
+            onOTPOkButtonPress: function (e) {
+                var t = sap.ui.getCore().byId(this._keyfragmenrt1 +  "--ch.unige.fi.kofaxuimodule.OTPSelectDialog");
+
+                // get WBE Selected     
+                var oWBE = t.getSelectedItem().getBindingContext("Z_WBS_ELEMENT_SBIND").getObject();
+
+                //get JSON Model 
+                var owf_context = this.getView().getModel();
+            
+                var oRegularizeLines = owf_context.getProperty("/toItems");
+
+                //set value selected for the Line selected in the Json model  
+                 oRegularizeLines[this._index].Wbselement = oWBE.WBSElementExternalID + " " + '-' + " " + oWBE.WBSDescription;
+                 oRegularizeLines[this._index].Centre = oWBE.FCenter;
+                //  yncronize with  Json model  
+        
+                this.dialog.close();
+
+                //   syncronize XML View with  Json model  
+                owf_context.refresh();
+                
+            },
+
+           
+             ////////////////////// Search Customers //////////////////////////
+          
+            /**
+              * Launch Customer Search Help dialog
+              * @param {object} oEvent The event
+              * @public
+              **/
+            onValueHelpRequestCustomer: function (oEvent) {
+              if (!this.dialog2) {
+                  this.dialog2 = sap.ui.xmlfragment(  this._keyfragmenrt2,          //  "idFragment2", 
+                                                    "ch.unige.fi.kofaxuimodule.view.fragment.CustomerSearchDialog", this);
+                  this.getView().addDependent(this.dialog2);
+              }
+
+                  this.dialog2.open();
+                  return this.dialog2;
+              },
+        
+            /**
+             *  CustomerCancel Button
+             * @param {object} oEvent The event
+             * @public
+             * */
+
+            onCustomerCancelButtonPress: function () {
+                this.dialog2.close();     // First: close fragment
+                // take care: necessary to destry ? error adding element with duplicate id....
+                //   this.dialog.destroy(); //Second: destoy fragment  
+                //   this.dialog=null;      // Third: null name/pointer 
+            },
+
+            onCustomerSearch: function (oEvent) {
+                var fragmentID =   this._keyfragmenrt2 +   "--ch.unige.fi.kofaxuimodule2.SupplierSelectDialog"; //idFragment2
+                var array_filter = ["Vendor", "Nameup",
+                                    "Street", "City", "Country"];
+                this._onSupplierSearch(oEvent, fragmentID, array_filter)
+            },
+
+            _onSupplierSearch: function (e, fragmentID, array_filter) {
+                var r = sap.ui.getCore().byId(fragmentID);
+                var t = this.getView().byId(fragmentID);
+
+                var i = r.getBindingInfo("items");
+
+                var s = e.getParameter("query") || e.getParameter("newValue");
+                var n = [];
+                var l = [];
+
+                if (s && s.length > 0) {
+                    for (var d = 0; d < array_filter.length; d++) {
+                        l.push(new sap.ui.model.Filter(array_filter[d], sap.ui.model.FilterOperator.Contains, s))
+                    }
+                }
+                n = l.length > 0 ? [new sap.ui.model.Filter(l, false)] : [];
+                r.bindAggregation("items", {
+                    model: i.model, path: i.path, parameters: i.parameters,
+                    template: i.template, filters: n
+                })
+            },
+
+            onCustomerOkButtonPress: function (oEvent) {
+                var t = sap.ui.getCore().byId( this._keyfragmenrt2 + "--ch.unige.fi.kofaxuimodule2.SupplierSelectDialog"); //"idFragment2
+                                                        
+                // get Supplier Selected     
+                var oSupplier  = t.getSelectedItem().getBindingContext("Z_GENERIC_FUNDS_REGUL_SRV").getObject();
+
+                let ui_Supplier_Name =  oSupplier.Name; // oSupplier.Vendor ; //+ ' - ' +  oSupplier.Name
+                this.byId("in_customer").setValue(ui_Supplier_Name);
+
+          
+
+              // Set new Customer into the context 
+
+                var existingData = this.getView().getModel();
+
+                existingData.setProperty("/ParkedinvoiceH/Name",        oSupplier.Name);
+                existingData.setProperty("/ParkedinvoiceH/Nameup",      oSupplier.Nameup);
+                existingData.setProperty("/ParkedinvoiceH/Vendor",      oSupplier.Vendor);
+                existingData.setProperty("/ParkedinvoiceH/Street",      oSupplier.Street);
+                existingData.setProperty("/ParkedinvoiceH/Postalcode",  oSupplier.Postalcode);
+                existingData.setProperty("/ParkedinvoiceH/City",        oSupplier.City);
+                existingData.setProperty("/ParkedinvoiceH/Country",     oSupplier.Country);
+
+
+                // get Bank details for the suppliers
+ 
+                this._update_bank_supp(  this.dialog2, oSupplier.Vendor);
+ 
+
+            },
+
+
+                //////////////////////// Account  Filter ///////////////////////
+
+
+            onCONFilterSelect: function (oEvent) {
+
+                  var t = oEvent.getSource().getBindingContext().getPath();
+                  this._index = t.substr(t.length - 1);
+
+
+                  if (!this.dialogACC) {
+
+                      this.dialogACC = sap.ui.xmlfragment( this._keyfragmenrt3 , //  "idFragment_CON", 
+                                                         "ch.unige.fi.kofaxuimodule.view.fragment.CON", this);
+
+                      if(Array.isArray(this.dialogACC)){
+
+                        this.dialogACC = sap.ui.getCore().byId("ch.unige.fi.kofaxuimodule.view.fragment.CON");
+                        this.dialogACC = this.getView().byId("ch.unige.fi.kofaxuimodule.view.fragment.CON");                       
+                       
+                      }
+
+
+                      this.getView().addDependent(this.dialogACC);
+                      
+                  }
+                   this.dialogACC.open();
+ 
+                   /*       this.loadFragment({
+                    name: "ch.unige.fi.kofaxuimodule.view.fragment.CON"
+                  }).then(function(myView) {
+                    myView.open();
+                  }.bind(this)); */
+
+
+                  return this.dialogACC;
+              
+            },
+
+
+            onCONCancelButtonPress: function () {
+
+             // this.dialogACC.invalidate();
+              this.dialogACC.close();   // First: close fragment
+            //  this.dialogACC.destroy(); //Second: destoy fragment 
+            //  this.dialogACC=null;      // Third: null name/pointer 
+            },
+
+
+          onCONSearch: function (e) {
+              var fragmentID =    this._keyfragmenrt3 +      "--ch.unige.fi.kofaxuimodule.CONSelectDialog"; //"idFragment_CON 
+              var array_filter = ["Saknr", "Sakan", "Txt50"]; //'Saknr, Sakan, Txt50'
+              this._onCompteSearch(e, fragmentID, array_filter)
+          },
+
+
+            _onCompteSearch: function (e, fragmentID, array_filter) {
+              var r = sap.ui.getCore().byId(fragmentID);
+
+
+              var i = r.getBindingInfo("items");
+
+              var s = e.getParameter("query") || e.getParameter("newValue");
+              var n = [];
+              var l = [];
+
+              if (s && s.length > 0) {
+                  for (var d = 0; d < array_filter.length; d++) {
+                      l.push(new sap.ui.model.Filter(array_filter[d], sap.ui.model.FilterOperator.Contains, s))
+                  }
+              }
+
+              n = l.length > 0 ? [new sap.ui.model.Filter(l, false)] : [];
+
+              r.bindAggregation("items", { model: i.model, path: i.path, parameters: i.parameters, template: i.template, filters: n });
+            },
+
+
+          onCONOkButtonPress: function (e) {
+
+
+              var t = sap.ui.getCore().byId(this._keyfragmenrt3 + "--ch.unige.fi.kofaxuimodule.CONSelectDialog"); //"idFragment_CON 
+
+
+              // get Compte Selected     
+              var oCON = t.getSelectedItem().getBindingContext("Z_ACCOUNTS_SRV").getObject();
+
+              //get JSON Model 
+          
+              var owf_context = this.getView().getModel();
+            
+              var oRegularizeLines = owf_context.getProperty("/toItems");
+
+              //set value selected for the Line selected in the Json model  
+              oRegularizeLines[this._index].Compte = oCON.Saknr;
+              oRegularizeLines[this._index].Txt    = oCON.Txt50;
+ 
+              this.dialogACC.close();
+
+              //   syncronize XML View with  Json model  
+              owf_context.refresh();
+          },
+
+           ///// Add Row ////////////////////////
+           /**
+           * Add a new Record
+           * @param {e}         
+           **/
+            addRow: function (e) {
+      
+
+              var owf_context = this.getView().getModel();
+              //get JSON Model 
+            // var oRegularize = sap.ui.getCore().getModel("Posting");
+              var oRegularizeLines = owf_context.getProperty("/toItems");
+
+              var oRegularizeLine = {};
+
+
+              oRegularizeLine.Ausbk = this._Ausbk;
+              oRegularizeLine.Bukrs = this._Bukrs;
+              oRegularizeLine.Belnr = this._Belnr;
+              oRegularizeLine.Gjahr = this._Gjahr;
+
+              oRegularizeLine.Wbselement = '';
+              oRegularizeLine.Compte = '';
+              
+              // il faut mettre la meme devise du ComboBox
+              //var Devise =   owf_context.getProperty("/ParkedinvoiceH/Divise");
+              oRegularizeLine.Divise = 'CHF' ; //Devise;
+             
+
+              oRegularizeLine.Montant = '0.00';
+              oRegularizeLine.Compte = '';
+              oRegularizeLine.Txt = '';
+              oRegularizeLine.Taxindicator = '';
+              oRegularizeLine.Dcred = '';
+              oRegularizeLines.push(oRegularizeLine);
+
+              
+              // je dois désactiver le CBox des Devises
+              owf_context.setProperty("/cboxdevise",  false);
+         
+ 
+              owf_context.refresh();
+
+          },
+
+           /**
+           * Delete Record
+           * @param {e}         
+           **/  
+           deleteRow: function (e) {
+              let oContexte = e.getSource().getBindingContext();
+
+              let path = oContexte.sPath;
+              const myArray = path .split("/");
+                        
+              let t = Number(myArray[2]); 
+  
+              //get JSON Model 
+
+              var owf_context = this.getView().getModel();
+              var oRegularizeLines = owf_context.getProperty("/toItems");
+
+              oRegularizeLines.splice(t, 1); // 2nd parameter means remove one item only      
+
+
+               // Currency ComboBox
+               if( oRegularizeLines.length > 0 ){
+                // if at least an Items exist => CBox Currency OFF
+                owf_context.setProperty("/cboxdevise",  false);
+
+               } else {             
+                // if no Items exis  => CBox Currency ON
+                owf_context.setProperty("/cboxdevise",  true);
+            
+               }  
+
+
+              owf_context.refresh();
+
+              this.refreshTotal();
+  
+            },
+      
+
+
+              /**
+               * refresh the Total of the table
+               * @param {}        
+              **/
+    
+              refreshTotal: function () {
+                //get JSON Model 
+                var owf_context = this.getView().getModel();
+
+                let Devise = owf_context.getProperty("/ParkedinvoiceH/Divise" );  
+
+                var oRegularizeLines = owf_context.getProperty("/toItems");
+
+                  // calculate TOTAL
+                  var sTotal = 0.00;
+                  var sDivise = "";
+                  var Charnumber = 0.00;
+
+                  var oCurrencyFormat = NumberFormat.getCurrencyInstance({
+                    currencyCode: false
+                  });
+
+                  // Dcred "0"  text": "Débit",
+                  // Cred  "1", "text": "Crédit",
+
+
+
+                  for (var r = 0; r < oRegularizeLines.length; r++) {
+
+                      Charnumber = oRegularizeLines[r].Montant;
+                      var number = Number.parseFloat(Charnumber);
+                      if( oRegularizeLines.Dcred === "0") {
+                        sTotal = sTotal + number;
+
+                      } else { //"Crédit",
+                        sTotal = sTotal - number;
+
+                      }
+                    
+
+                    //  sDivise = oRegularizeLines[r].Divise;
+
+                  }
+             
+                  var tot_format = oCurrencyFormat.format(sTotal, Devise); // returns ¥1,235
+                      
+                  // Total de la Demande -> Defaul = valuer de la pièce + Total Items
+                  var oTotal = sap.ui.getCore().getModel("Total");
+ 
+       
+                   oTotal.setProperty("/Total",  tot_format);
+  
+                   owf_context.refresh();
+ 
+              },
+
+            /**
+             * Update Bank vendor details
+             * @param {Vendor}  ID Vendor
+             * @param {existingData}  bank Vendor
+             * @param {Dialog}   
+             * @return  
+             * @private
+           * */
+              _update_bank_supp: function(  dialog2, Vendor){
+
+   
+                 var vend_filter = 'BankSet?$filter=Partner eq' + "'"  +  Vendor  + "'" + '&$format=json';
+                
+                
+                  var that = this;
+
+                  $.ajax({
+                    url: "/zunige_ui_kofax_approuter.chunigefikofaxuimodule/sap/opu/odata/sap/Z_KOFAX_INVOICE_SRV/" + vend_filter ,
+                    method: "GET",
+                    cache: false,
+                    async: false,
+                    success: function (result, xhr, data) {
+
+                                           
+                     
+                        var owf_context = that.getView().getModel();
+
+                        var ParkedinvoiceH =  owf_context.getProperty("/ParkedinvoiceH");
+                   
+                      
+                      // check if i get some entries 
+
+                      if(result.d.results.length > 0){ 
+
+                          //  var oBankVendor = result.d.results;   // get the array                                  
+                          var ArrayBankVendor = [];
+                          var JBanque = 
+                          '{"Counter": "0000", "Bankaccount": "","Bankcountry": "","Bankkey": "", "Iban": "","Swift": "", "Text": "" }';
+
+                           var obj_JBanque = JSON.parse(JBanque); //to convert the string into a JavaScript object
+                         
+                 
+                           ArrayBankVendor.push(obj_JBanque);
+
+
+                          for (var d = 0; d < result.d.results.length; d++) {
+             
+                           // if(ParkedinvoiceH.Bankcounter ===  result.d.results[d].Counter ){
+                           //    owf_context.setProperty("/BankVendor", result.d.results[d]);
+                           //    
+                           //  }
+
+                              var oJBanque = JSON.parse(JBanque);
+                              oJBanque.Counter =  result.d.results[d].Counter ;
+                              oJBanque.Bankaccount =  result.d.results[d].Bankaccount ;
+                              oJBanque.Bankcountry =  result.d.results[d].Bankcountry ;
+                              oJBanque.Bankkey =  result.d.results[d].Bankkey  ;
+                              oJBanque.Iban  =  result.d.results[d].Iban  ;
+                              oJBanque.Swift  =  result.d.results[d].Swift ;
+                              oJBanque.Text =  result.d.results[d].Text ;
+
+                              ArrayBankVendor.push(oJBanque);
+
+                       
+                          }
+
+                          owf_context.setProperty("/ArrayBankVendor", ArrayBankVendor);
+                          owf_context.refresh();
+                          
+                          // I've changed the supplier
+
+                          // 1 => I propose the Key 0000 for the Combobox
+                          that.getView().byId("_IDGenTesdf2e").setSelectedKey("0000");
+                          // 2 => I delete the value related the Bank on the screen
+                          owf_context.setProperty("/BankVendor", "");
+
+
+                          dialog2.close();
+                        }
+                    },
+
+                    // @ts-ignore
+                    error: function (err) {
+                      if (err.responseText.search("Ressource non trouvée") > 0){
+
+                        MessageToast.show("Pas trouvé la banque du fournisseur");
+                        dialog2.close();
+                      } else {
+
+                        dialog2.close();
+                        MessageToast.show("Error submiting bank Update request");
+
+
+
+                      };
+ 
+                    }
+                
+                });
+
+
+               
+              },
+
+              /**
+               * This event is fired when the value in the Bank ComboBox is changed
+               * @param {oEvent} 
+               * @return {}  
+              * */
+
+              onchange_combox: function(oEvent) {
+                //var newKey = oEvent.getParameter("newValue");
+                var newKey = oEvent.getSource().getSelectedKey();
+                // get the context 
+                var owf_context = this.getView().getModel();
+                var ParkedinvoiceH  =  owf_context.getProperty("/ParkedinvoiceH");
+                var BankVendor      =  owf_context.getProperty("/BankVendor");
+                var ArrayBankVendor =  owf_context.getProperty("/ArrayBankVendor");
+             
+                for (var d = 0; d < ArrayBankVendor.length; d++) {
+             
+                  if(newKey === ArrayBankVendor[d].Counter ){
+                    owf_context.setProperty("/BankVendor", ArrayBankVendor[d] );
+                 
+                  }
+
+                }
+
+                owf_context.refresh();
+
+              },
+      
+              /**
+               * This event is fired when the value in the Currency ComboBox is changed
+               * @param {oEvent} 
+               * @return {}  
+              * */
+
+              onchange_combox_cur: function(oEvent) {
+                 
+                var newKey = oEvent.getSource().getSelectedKey(); // ComboBox Key="{Currency}"
+                // get the context 
+                var owf_context = this.getView().getModel();
+                 
+                owf_context.setProperty("/ParkedinvoiceH/Divise", newKey );  
+                owf_context.setProperty("/ParkedinvoiceH/CurrencyCode", newKey );  
+
+                for (var d = 0; d < owf_context.oData.toItems.length; d++) {
+                  
+                  
+                  owf_context.oData.toItems[d].Divise = newKey;
+               }
+
+
+
+                // i update the totals
+                this._set_total(owf_context.oData.demande_amount , owf_context.oData.toItems);
+
+
+
+                owf_context.refresh();
+
+              },
+
+
+
+
+
+           /**
+              * This Method reserve the Task
+             * @param {owf_context} WF Context
+             * @param {user} The Owner of the Task 
+             * @return {xxxx}  
+             * @private
+           * */
+
+            _reserved: function (owf_context, user) {
+               var taskId = owf_context.oData.task.taskId 
+               var oThisController = this;
+               var token = oThisController. _fetchToken(); 
+
+              ////////////  get logs ///////////////
+                // Step 1:
+                // Retrieves the user task instance with the specified task instance ID. => we get the WF Instance ID
+                //https://help.sap.com/doc/80205e0dc75945538b451284fdcc935b/Cloud/en-US/wfs-core-api-docu-cf.html#api-UserTaskInstances-v1TaskInstancesTaskInstanceIdGet
+                ///v1/task-instances/{taskInstanceId}
+              /*
+                var Api_endpoint = "/zunige_ui_kofax_approuter.chunigefikofaxuimodule/bpmworkflowruntime/v1/task-instances/" +  taskId ;
+       
+                $.ajax({
+                    url: Api_endpoint,
+                    method: "GET",
+                    contentType: "application/json",
+                    async: true,
+                     headers: {
+                        "X-CSRF-Token": token
+                    },
+                    // @ts-ignore
+                    success: function (result2, xhr2, data2) {
+                  
+                      debugger;
+
+                        //result2.workflowInstanceId
+
+                        // Step 2:
+                        // Retrieves execution logs for a given workflow instance.=> we get the WF Instance ID
+                        //https://help.sap.com/doc/80205e0dc75945538b451284fdcc935b/Cloud/en-US/wfs-core-api-docu-cf.html#api-WorkflowInstances-v1WorkflowInstancesWorkflowInstanceIdExecutionLogsGet
+                        ///v1/workflow-instances/{workflowInstanceId}/execution-logs
+
+
+                        Api_endpoint = "/zunige_ui_kofax_approuter.chunigefikofaxuimodule/bpmworkflowruntime/v1/workflow-instances/" + result2.workflowInstanceId + "/execution-logs";
+
+                        $.ajax({
+                            url: Api_endpoint,
+                            method: "GET",
+                            contentType: "application/json",
+                            async: true,
+                            headers: {
+                                "X-CSRF-Token": token
+                            },
+                            // @ts-ignore
+                            success: function (result2, xhr2, data2) {
+                            //Status: 204 - The context has been updated.
+                            debugger;
+
+                            },
+
+                            // @ts-ignore
+                            error: function (err) {
+
+                                MessageToast.show("Error submiting the request");
+                            }
+                        });
+ 
+                    },
+
+                    // @ts-ignore
+                    error: function (err) {
+
+                        MessageToast.show("Error submiting the request");
+                    }
+
+                });
+              */
+            ///////////////////////////////////////
+
+
+               var inputPayload = {
+                              "processor" : user,
+                              "priority"  : "VERY_HIGH"
+                                   };
+ 
+                                   
+                    $.ajax({
+                      url: "/zunige_ui_kofax_approuter.chunigefikofaxuimodule/bpmworkflowruntime/v1/task-instances/" +  taskId,
+                      method: "PATCH",
+                      contentType: "application/json",
+                      async: false,
+                      data:  JSON.stringify(inputPayload), 
+                      headers: {
+                          "X-CSRF-Token": token
+                      },
+                      // @ts-ignore
+                      success: function (result2, xhr2, data2) {
+                            MessageToast.show("Vous devez completer la Facture: " + owf_context.getProperty("/Belnr"));
+                        },
+                      // @ts-ignore
+                      error: function (err) {
+                        
+                          MessageToast.show("Error submiting the request");
+                        }
+                  });
+
+            },
+
+            /**
+              * This Method get a new AJAX Token
+              * @param  
+              * @param  
+              * @return    {token}
+              * @private
+            * */
+
+
+            _fetchToken: function () {
+                    var token;
+                    $.ajax({
+                        url: "/zunige_ui_kofax_approuter.chunigefikofaxuimodule/bpmworkflowruntime/v1/xsrf-token",
+                        method: "GET",
+                        async: false,
+                        headers: {
+                            "X-CSRF-Token": "Fetch"
+                        },
+                        success: function (result, xhr, data) {
+                            token = data.getResponseHeader("X-CSRF-Token");
+                        }
+                    });
+                    return token;
+             },
+  
+
+            /**
+              * This Method calculate the total amount of the Items
+              * @param   {oEvent}
+              * @param  
+              * @return    {token}
+              * @private
+            * */
+
+
+
+
+             onCalculateTotalItems: function (oEvent) {
+
+              var total1 = 0;
+              var total1nd = 0;
+
+              var t = oEvent.getSource().getBindingContext().getPath();
+              this._index = t.substr(t.length - 1);
+  
+              total1 = oEvent.getParameter("value");
+              total1nd = oEvent.getParameter("value");
+
+              //replace comma with .
+              total1 =  total1.replace(',', '.');
+              total1nd  =  total1nd.replace(',', '.');
+
+              // to avoid NaN on the screen 
+              if (total1 === "") {total1 = "0"}
+
+              var result = (total1 - Math.floor(total1)) !== 0;
+              if (!result) {
+                  total1 = parseFloat(total1).toFixed(2);
+              }
+  
+              //get JSON Model 
+               var owf_context = this.getView().getModel();
+               var oRegularizeLines = owf_context.getProperty("/toItems");
+  
+              //set value selected for the Line selected in the Json model  
+              oRegularizeLines[this._index].Montant = total1;
+  
+              // calculate TOTAL
+              var sTotal = 0.00;
+              var Charnumber = 0.00;
+  
+              for (var r = 0; r < oRegularizeLines.length; r++) {
+  
+                  Charnumber = oRegularizeLines[r].Montant;
+                  var number = Number.parseFloat(Charnumber);
+  
+
+
+                  if( oRegularizeLines[r].Dcred === "0") {
+                    sTotal = sTotal + number;
+
+                  } else { //"Crédit",
+                    sTotal = sTotal - number;
+
+                  }
+
+ 
+              }
+  
+              var oCurrencyFormat = NumberFormat.getCurrencyInstance({
+                  currencyCode: false
+              });
+               
+             var tot_format = oCurrencyFormat.format(sTotal, oRegularizeLines[this._index].Divise); // returns ¥1,235
+        
+       
+            // put the number without decimals
+            oRegularizeLines[this._index].Montant = total1nd;
+
+
+   
+            // Total de la Demande -> Defaul = valuer de la pièce + Total Items
+            var oTotal = sap.ui.getCore().getModel("Total");
+
+  
+             oTotal.setProperty("/Total",  tot_format);
+           // oTotal.setProperty("/Total_Reg", tot_format );
+
+ 
+              owf_context.refresh();
+
+
+          },
+
+              /** Overflow Toolbar begin */
+              /**
+              * Sort Table records
+              * @param {}        
+              **/
+  
+              onSort: function (oEvent) {
+                this.bDescending = !this.bDescending;
+                this.fnApplyFiltersAndOrdering();
+              },
+
+              /**
+              * Filter Table
+              * @param {}        
+              **/
+              onFilter: function (oEvent) {
+                this.sSearchQuery = oEvent.getSource().getValue();
+                this.fnApplyFiltersAndOrdering();
+              },
+          
+              /**
+              * Group Table
+              * @param {}        
+              **/
+              onGroup: function (oEvent){
+                this.bGrouped = !this.bGrouped;
+                this.fnApplyFiltersAndOrdering();
+              },
+
+
+
+              fnApplyFiltersAndOrdering: function (oEvent){
+                var aFilters = [],
+                  aSorters = [];
+          
+                if (this.bGrouped) {
+                  aSorters.push(new Sorter("Compte", this.bDescending, this._fnGroup));
+                } else {
+                  aSorters.push(new Sorter("Wbselement", this.bDescending));
+                }
+          
+                if (this.sSearchQuery) {
+                  var oFilter = new Filter("Wbselement", FilterOperator.Contains, this.sSearchQuery);
+                  aFilters.push(oFilter);
+                }
+          
+                this.byId("ch.unige.fi.kofaxuimodule.Items.Table").getBinding("items").filter(aFilters).sort(aSorters);
+              },
+
+              /**
+              * Export data into Spreadsheet
+              * @param {object} oEvent The event
+              * @public
+              **/
+
+              onExport: function() {
+                var aCols, oRowBinding, oSettings, oSheet, oTable;
+          
+                if (!this._oTable) {
+                  this._oTable = this.byId('ch.unige.fi.kofaxuimodule.Items.Table');
+                }
+          
+                oTable = this._oTable;
+                oRowBinding = oTable.getBinding('items');
+                aCols = this.createColumnConfig();
+          
+                oSettings = {
+                  workbook: {
+                    columns: aCols,
+                    hierarchyLevel: 'Level'
+                  },
+                  dataSource: oRowBinding,
+                  fileName: 'Table.xlsx',
+                  worker: false // We need to disable worker because we are using a MockServer as OData Service
+                };
+          
+                oSheet = new Spreadsheet(oSettings);
+                oSheet.build().finally(function() {
+                  oSheet.destroy();
+                });
+              },
+
+              /**
+              * Create Table columns
+              * @public
+              **/
+              createColumnConfig: function() {
+                var aCols = [];
+ 
+          
+                aCols.push({
+                  label: 'Document',
+                  type: EdmType.String,
+                  property: 'Belnr' 
+              
+                });
+
+
+                aCols.push({
+                  label: 'Exercise',
+                  type: EdmType.String,
+                  property: 'Gjahr' 
+              
+                });
+
+
+                aCols.push({
+                  label: 'Compte général',
+                  type: EdmType.String,
+                  property: 'Compte' 
+              
+                });
+          
+
+                aCols.push({          //OK
+                  property: 'Montant',
+                  type: EdmType.Number,
+                  scale: 0
+                });
+          
+                aCols.push({          //OK
+                  label: 'Divise',
+                  property: 'Divise',
+                  type: EdmType.String
+                   
+                });
+ 
+
+                aCols.push({
+                  label: 'Compte général Txt ',
+                  property: 'Txt',
+                  type: EdmType.String
+                });
+          
+                aCols.push({   //ok
+                  label: 'El. OTP',
+                  property: 'Wbselement',
+                  type: EdmType.String,
+                });
+          
+   
+                return aCols;
+              },
+
+
+               /** Overflow Toolbar END */
+
+        /***********************************************************************************************************/
+        /*                                    ↓ ATTACHMENTS-RELATED FUNCTIONS ↓                                    */
+        /***********************************************************************************************************/
+
+        onBeforeUploadStarts: function (oEvent) {
+          const  oUploadSet = oEvent.getSource();
+          const fileName = oEvent.getParameter("item").getFileName();
+          const slug =    fileName;
+
+          const  crsfToken =  this.getOwnerComponent().getModel().getSecurityToken();
+
+
+          oUploadSet.removeAllHeaderFields();
+
+          oUploadSet.addHeaderField(
+              new sap.ui.core.Item({
+               key: "slug",
+              text: slug
+            }));
+
+          oUploadSet.addHeaderField(
+            new sap.ui.core.Item({
+                key: "x-csrf-token",
+                text: crsfToken
+            }));
+                
+        },
+
+
+        onUploadCompleted: function (oEvent) {
+              var oStatus = oEvent.getParameter("status"),
+                  oItem = oEvent.getParameter("item"),
+                  oUploadSet = this.getView().byId("UploadSet");
+
+           //     if (oStatus && oStatus !== 200) {
+            //        oItem.setUploadState("Error");
+           //         oItem.removeAllStatuses();
+            //    } else {
+                //  oUploadSet.removeIncompleteItem(oItem);
+
+                  //get file component
+                  // needed to bind data to the Promise/Then function
+                  this.oFileUploadComponent = oEvent.getParameters("items").item.getFileObject();
+
+
+                  if (this.oFileUploadComponent) {
+
+                    // getFileTypes
+                    // getHeaderFields
+                      
+                      // needed to bind data to the Promise/Then function
+
+                          debugger;
+
+                           this._getBase64File(this.oFileUploadComponent).then(function(data) {
+                           var my_file = data.replace('data:application/pdf;base64,','');
+
+                         var owf_context = this.getView().getModel();
+                         var oPostingFiles =    owf_context.getProperty("/toFiles");   //oPosting.getProperty("/toFiles");
+                   
+                          var now = new Date();    
+                          var that = this;
+                          var oAttachment = {
+                              "Attachmentid":    now.getHours().toString() + now.getMinutes().toString() + now.getSeconds().toString() + now.getMilliseconds().toString(),
+                              "Societe":       that._Bukrs,
+                              "Documentnumber":       that._Belnr,
+                              "Gjahr":       that._Gjahr,
+                              "Filename": this.oFileUploadComponent.name,
+                              "Mimetype": 'application/pdf' , //this.oFileUploadComponent.mimetype,
+                              "Url": "",
+                              "Description": "",
+                              "Filecontent": my_file // data
+                          }; 
+ 
+                          oPostingFiles.push(oAttachment);
+                          owf_context.refresh();
+                          
+                      }.bind(this));
+
+         
+                  }
+              //  }
+  
+            },
+
+              /**
+                    * Read a file and get its BASE64 content
+                    * @param {object} oFile The file as been uploaded
+                    * @param {oController The result of the reading as a Promise
+                  * @private
+                  * */
+               _handleRawFile: function (oFile, oController) {
+                    //handle file data
+                    var oFileRaw = {
+                        name: oFile.name,
+                        mimetype: oFile.type,
+                        size: oFile.size,
+                        data: []
+                    };
+                    //reader
+                    // var aUploadFiles = [];
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        oFileRaw.data = e.target.result; //set buffer data
+                        oController.uploadFileRaw = oFileRaw;
+                    }.bind(oController);
+                    reader.readAsArrayBuffer(oFile);
+              },
+
+              /**
+              * Read a file and get its BASE64 content
+              * @param {object} iFile The file as sent by an HTML file input
+              * @return {Promise} The result of the reading as a Promise
+              * @private
+              * */
+
+
+              _getBase64File: function(iFile) {
+                return new Promise(function(resolve, reject) {
+                  var reader = new FileReader();
+                  reader.readAsDataURL(iFile);
+                  reader.onload = function() {
+                    resolve(reader.result);
+                  };
+                  reader.onerror = function(error) {
+                    reject(error);
+                  };
+                });
+              }
+            
+  
+      });
+    }
+  );
+  
