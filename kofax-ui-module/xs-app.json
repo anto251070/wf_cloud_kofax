@@ -1,0 +1,46 @@
+{
+  "welcomeFile": "/index.html",
+  "authenticationMethod": "route",
+  "logout": {
+    "logoutEndpoint": "/do/logout"
+   }   ,
+  "routes": [
+    {
+      "source": "^/bpmworkflowruntime/(.*)$",
+      "target": "/$1",
+      "service": "com.sap.bpm.workflow",
+      "endpoint": "workflow_rest_url",
+      "authenticationType": "xsuaa"
+     } ,
+     {
+      "source": "^/user-api(.*)",
+      "target": "$1",
+      "service": "sap-approuter-userapi"
+     },
+     {
+      "source": "^/sap/(.*)$",
+      "target": "/sap/$1",
+      "destination": "UNIGE_S4HANA_WF",
+      "authenticationType": "xsuaa",
+      "csrfProtection": false
+    },
+    {
+      "source": "^/resources/(.*)$",
+      "target": "/resources/$1",
+      "authenticationType": "none",
+      "destination": "ui5"
+    },
+    {
+      "source": "^(.*)$",
+      "target": "$1",
+      "service": "html5-apps-repo-rt",
+      "authenticationType": "xsuaa"
+    },
+    {
+      "source": "^/Component-preload.js$",
+      "service": "html5-apps-repo-rt",
+      "authenticationType": "xsuaa",
+      "cacheControl": "no-cache, no-store, must-revalidate"
+      }
+  ]
+}
